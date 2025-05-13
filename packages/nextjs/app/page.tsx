@@ -1,72 +1,121 @@
 "use client";
 
-import Link from "next/link";
-import type { NextPage } from "next";
+import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { Address } from "~~/components/scaffold-eth";
+import { useScaffoldContract, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { notification } from "~~/utils/scaffold-eth";
 
-const Home: NextPage = () => {
-  const { address: connectedAddress } = useAccount();
+export default function MessageBoard() {
+  const { address, isConnected } = useAccount();
+  const [newMessage, setNewMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Contract interaction hooks
+  const { data: messageBoardContract } = useScaffoldContract({
+    contractName: "MessageBoard",
+  });
+
+  const { data: currentMessage, refetch: refetchMessage } = useScaffoldReadContract({
+    contractName: "MessageBoard",
+    functionName: "getMessage",
+    watch: true,
+  });
+
+  const { writeContractAsync: updateMessage } = useScaffoldWriteContract({
+    contractName: "MessageBoard",
+    functionName: "updateMessage",
+    args: [newMessage],
+    onBlockConfirmation: () => {
+      refetchMessage();
+      setIsLoading(false);
+      notification.success("Message updated!");
+    },
+  });
+
+  const { writeContractAsync: clearMessage } = useScaffoldWriteContract({
+    contractName: "MessageBoard",
+    functionName: "clearMessage",
+    onBlockConfirmation: () => {
+      setNewMessage("");
+      refetchMessage();
+      setIsLoading(false);
+      notification.success("Message cleared!");
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+    setIsLoading(true);
+    try {
+      await updateMessage();
+    } catch (error) {
+      console.error("Error updating message:", error);
+      notification.error("Failed to update message");
+      setIsLoading(false);
+    }
+  };
+
+  const handleClear = async () => {
+    setIsLoading(true);
+    try {
+      await clearMessage();
+    } catch (error) {
+      console.error("Error clearing message:", error);
+      notification.error("Failed to clear message");
+      setIsLoading(false);
+    }
+  };
+
+  // Debugging: Log contract and current message
+  useEffect(() => {
+    console.log("MessageBoard Contract:", messageBoardContract);
+    console.log("Current Message:", currentMessage);
+  }, [messageBoardContract, currentMessage]);
 
   return (
-    <>
-      <div className="flex items-center flex-col grow pt-10">
-        <div className="px-5">
-          <h1 className="text-center">
-            <span className="block text-2xl mb-2">Welcome to</span>
-            <span className="block text-4xl font-bold">Scaffold-ETH 2</span>
-          </h1>
-          <div className="flex justify-center items-center space-x-2 flex-col">
-            <p className="my-2 font-medium">Connected Address:</p>
-            <Address address={connectedAddress} />
-          </div>
+    <div className="flex flex-col items-center justify-center p-4">
+      <h1 className="text-2xl font-bold mb-4">Message Board</h1>
 
-          <p className="text-center text-lg">
-            Get started by editing{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              packages/nextjs/app/page.tsx
-            </code>
-          </p>
-          <p className="text-center text-lg">
-            Edit your smart contract{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              YourContract.sol
-            </code>{" "}
-            in{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              packages/hardhat/contracts
-            </code>
-          </p>
-        </div>
-
-        <div className="grow bg-base-300 w-full mt-16 px-8 py-12">
-          <div className="flex justify-center items-center gap-12 flex-col md:flex-row">
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <BugAntIcon className="h-8 w-8 fill-secondary" />
-              <p>
-                Tinker with your smart contract using the{" "}
-                <Link href="/debug" passHref className="link">
-                  Debug Contracts
-                </Link>{" "}
-                tab.
-              </p>
-            </div>
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <MagnifyingGlassIcon className="h-8 w-8 fill-secondary" />
-              <p>
-                Explore your local transactions with the{" "}
-                <Link href="/blockexplorer" passHref className="link">
-                  Block Explorer
-                </Link>{" "}
-                tab.
-              </p>
-            </div>
-          </div>
+      <div className="bg-base-200 p-4 rounded-lg mb-4 w-full max-w-md">
+        <p className="font-semibold mb-2">Current Message:</p>
+        <div className="p-2 bg-base-100 rounded break-words">
+          {currentMessage || <span className="text-gray-500">No message set</span>}
         </div>
       </div>
-    </>
-  );
-};
 
-export default Home;
+      <form onSubmit={handleSubmit} className="w-full max-w-md">
+        <div className="mb-4">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={e => setNewMessage(e.target.value)}
+            placeholder="Enter your message"
+            className="input input-bordered w-full"
+            disabled={isLoading}
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            disabled={!isConnected || !newMessage.trim() || isLoading}
+            className="btn btn-primary flex-1"
+          >
+            {isLoading ? "Updating..." : "Update"}
+          </button>
+          <button
+            type="button"
+            onClick={handleClear}
+            disabled={!isConnected || isLoading}
+            className="btn btn-secondary flex-1"
+          >
+            {isLoading ? "Clearing..." : "Clear"}
+          </button>
+        </div>
+      </form>
+
+      {!isConnected && <div className="mt-4 text-warning">Connect your wallet to interact</div>}
+    </div>
+  );
+}
