@@ -1,0 +1,36 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/MessageBoard.sol": {
+      "content": "\n// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\n/**\n* @author Sebera Jonas\n* @title MessageBoard\n* @dev A simple contract to store a message \n */\n\ncontract MessageBoard {\n    string private message;\n\n    event MessageUpdated(string newMessage);\n\n    function updateMessage(string memory _newMessage) public {\n        message = _newMessage;\n        emit MessageUpdated(_newMessage);\n    }\n\n    function getMessage() public view returns (string memory) {\n        return message;\n    }\n\n    function clearMessage() public {\n        message = \"\";\n        emit MessageUpdated(\"\");\n    }\n}"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "evmVersion": "paris",
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}

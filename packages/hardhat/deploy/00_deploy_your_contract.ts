@@ -33,8 +33,9 @@ const deployMessageBoard: DeployFunction = async function (hre: HardhatRuntimeEn
   });
 
   // Get the deployed contract to interact with it after deploying.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const messageBoard = await hre.ethers.getContract<Contract>("MessageBoard", deployer)
-  console.log("MessageBoard deployed to:", messageBoard.address);
+  console.log("MessageBoard contract deployed successfully!!");
 };
 
 export default deployMessageBoard;

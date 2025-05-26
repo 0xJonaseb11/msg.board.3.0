@@ -7,7 +7,61 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     MessageBoard: {
-      address: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+      address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      abi: [
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "string",
+              name: "newMessage",
+              type: "string",
+            },
+          ],
+          name: "MessageUpdated",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "clearMessage",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getMessage",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "_newMessage",
+              type: "string",
+            },
+          ],
+          name: "updateMessage",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
+    },
+  },
+  84532: {
+    MessageBoard: {
+      address: "0x13dd1DF1be859169e94b89B17C067a26d8b6Cc80",
       abi: [
         {
           anonymous: false,
